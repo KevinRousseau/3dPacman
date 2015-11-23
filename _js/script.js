@@ -34,9 +34,9 @@ const init = () => {
   };
 
   cubeSize = {
-    'width': 15,
-    'height': 15,
-    'depth': 15
+    'width': 20,
+    'height': 20,
+    'depth': 20
   };
 
   if(_three){
@@ -57,15 +57,16 @@ const setScene = () => {
   _three.append(renderer.domElement);
 
   //grid
-  grid = new THREE.GridHelper( 400, 15 );
+  grid = new THREE.GridHelper( 400, 20 );
   grid.setColors( 0xffffff, 0xffffff );
-  grid.position.x = 2.5;
-  grid.position.z = 2.5;
-  grid.position.z = 2.5;
+  //herpositioneren grid zodat 0 van cube overeenkomt op grid
+  grid.position.x = 10;
+  grid.position.z = 10;
+  grid.position.z = 10;
   scene.add(grid);
 
-  let geometry = new THREE.BoxGeometry(cubeSize.width, cubeSize.height, cubeSize.depth, 15, 15, 15); //15 is segmenten voor width, height, depth
-  let material = new THREE.MeshBasicMaterial({color: 0x00ff00 });
+  let geometry = new THREE.BoxGeometry(cubeSize.width, cubeSize.height, cubeSize.depth, 5, 5, 5); //laatste 3 parameterz zijn segmenten voor width, height, depth
+  let material = new THREE.MeshBasicMaterial({color: 0x0000ff});
   cube = new THREE.Mesh(geometry, material);
   cube.position.y = cubeSize.height/2;
   scene.add( cube );
