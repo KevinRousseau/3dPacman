@@ -22,7 +22,7 @@ module.exports = [
     method: 'GET',
     path: '/',
     handler: (request, reply) => {
-      return reply.redirect('/start');
+      return reply.redirect('/game');
     }
   }
 
