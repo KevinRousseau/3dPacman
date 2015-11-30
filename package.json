@@ -33,6 +33,7 @@
     "npm": "3.x.x"
   },
   "dependencies": {
+    "csg": "^1.0.1",
     "dotenv": "^1.2.0",
     "forever": "^0.15.1",
     "handlebars": "^3.0.3",
@@ -40,6 +41,7 @@
     "inert": "^3.0.1",
     "joi": "^6.7.1",
     "lodash": "^3.10.1",
+    "three-csg": "^1.0.0",
     "three-orbit-controls": "^72.0.0",
     "vision": "^3.0.0",
     "yar": "^4.2.0"
