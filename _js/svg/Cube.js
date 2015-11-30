@@ -45,6 +45,9 @@ export default class Cube {
     cube.position.y = y;
     cube.position.z = z;
 
+    cube.castShadow = true;
+    cube.receiveShadow = true;
+
     this.scale = cube.scale;
 
     return cube;

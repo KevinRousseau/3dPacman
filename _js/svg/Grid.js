@@ -8,7 +8,7 @@ export default class Grid {
   }
 
   changepos(){
-    if(this.position.y > -10){
+    if(this.position.y > -5){
       this.position.y--;
     }
     requestAnimationFrame(() => this.changepos());
