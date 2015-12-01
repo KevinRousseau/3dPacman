@@ -2,6 +2,10 @@
 
 import 'array.from';
 
+export const randomPos = arr => {
+  return arr[Math.floor((Math.random() * arr.length) + 0)];
+};
+
 export const closest = (num, arr) => {
   let curr = arr[0];
   let diff = Math.abs(num - curr);

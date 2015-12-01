@@ -38,7 +38,7 @@ export default class Cube {
     let {x, y, z} = this.position;
 
     let geometry = new THREE.BoxGeometry(this.cubeSize.width, this.cubeSize.height, this.cubeSize.depth, 5, 5, 5); //laatste 3 parameterz zijn segmenten voor width, height, depth
-    let material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+    let material = new THREE.MeshLambertMaterial({color: 0x0000ff, side: THREE.FrontSide});
 
     let cube = new THREE.Mesh(geometry, material);
     cube.position.x = x;

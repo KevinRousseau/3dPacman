@@ -5,7 +5,8 @@
 
 // import 'babel-core/polyfill';
 // or import specific polyfills
-import {Grid, Cube, Floor, Pacman} from './svg/';
+import {Grid, Cube, Floor, Pacman, Coin} from './svg/';
+import {randomPos, closest} from './helpers/util';
 
 let OrbitControls = require('three-orbit-controls')(THREE);
 //let ThreeBSP = require('three-csg');
@@ -27,6 +28,8 @@ let cubeSize = {
   'depth': 20
 };
 
+let numCoins = 5;
+
 //three objects
 let scene,
   camera,
@@ -43,7 +46,10 @@ let floor,
 let outerWalls = [],
   innerWalls = [],
   xPosGrid = [],
-  zPosGrid = [];
+  zPosGrid = [],
+  coins = [],
+  xGrid,
+  zGrid;
 
 //true/false
 let follow = false,
@@ -124,45 +130,125 @@ const setWalls = () => {
     }
   }
 
+  xGrid = xPosGrid;
+  zGrid = zPosGrid;
+
+  xGrid.splice(xGrid[0], 2);
+  xGrid.pop();
+
+  zGrid.splice(zGrid[0], 2);
+  zGrid.pop();
+
   drawWalls();
 };
 
 const drawWalls = () => {
-  let drag = false;
+  //drag and draw
+  /*let drag = false;
 
-  _three.mouseup(() => {
+  _three.mouseup((e) => {
     drag = false;
   });
 
-  _three.mousedown(() => {
+  _three.mousedown((e) => {
     drag = true;
-    drawSingleWall();
+    //drawSingleWall(e);
 
-    _three.mousemove(() => {
+    _three.mousemove((e) => {
       if(drag){
-        drawSingleWall();
+        drawSingleWall(e);
       }
     });
+  });*/
+
+  //click and drag
+  let posX;
+  let posZ;
+  let endPosX;
+  let endPosZ;
+  let drawDown = false;
+  let drawUp = false;
+
+  _three.mousedown((e) => {
+    if(!drawDown){
+      let c1 = convertPos(e);
+      posX = closest(c1.x, xPosGrid);
+      posZ = closest(c1.z, zPosGrid);
+      drawSingleWall(convertPos(e));
+      drawDown = true;
+    }
   });
 
+  _three.mousemove((e) => {
+    if(drawDown && !drawUp){
+      let c2 = convertPos(e);
+      endPosX = closest(c2.x, xPosGrid);
+      endPosZ = closest(c2.z, zPosGrid);
+    }
+  });
+
+  _three.mouseup(() => {
+    drawUp = true;
+    if(drawUp){
+      drawDown = false;
+      drawUp = false;
+
+      let betweenPos = {};
+
+      if(posX === endPosX){
+        betweenPos.x = posX;
+        if(posZ < endPosZ){
+          for(let i = posZ+cubeSize.width; i <= endPosZ; i+=cubeSize.width){
+            betweenPos.z = i;
+            drawSingleWall(betweenPos);
+          }
+        }else{
+          for(let i = posZ-cubeSize.width; i >= endPosZ; i-=cubeSize.width){
+            betweenPos.z = i;
+            drawSingleWall(betweenPos);
+          }
+        }
+
+      }else if(posZ === endPosZ){
+
+        if(posX < endPosX){
+          for(let i = posX+cubeSize.width; i <= endPosX; i+=cubeSize.width){
+            betweenPos.x = i;
+            betweenPos.z = posZ;
+            drawSingleWall(betweenPos);
+          }
+        }else{
+          for(let i = posX-cubeSize.width; i >= endPosX; i-=cubeSize.width){
+            betweenPos.x = i;
+            betweenPos.z = posZ;
+            drawSingleWall(betweenPos);
+          }
+        }
+
+      }
+    }
+  });
+
+  //confirm maze draw with SPACEBAR
   $('body').keyup((e) => {
     if(e.keyCode === 32){
       if(!follow){
         draw = false;
         drawCoins();
+        raiseWalls();
       }
     }
   });
 };
 
-const drawSingleWall = () => {
+const convertPos = (e) => {
   if(draw){
     let vector = new THREE.Vector3();
 
     vector.set(
-        (event.clientX / windowSize.width)*2-1,
-        -(event.clientY / windowSize.height)*2+1,
-        0.5);
+      (e.clientX / windowSize.width)*2-1,
+      -(e.clientY / windowSize.height)*2+1,
+      0.5);
 
     vector.unproject(camera);
 
@@ -172,9 +258,15 @@ const drawSingleWall = () => {
 
     let pos = camera.position.clone().add(dir.multiplyScalar(distance));
 
+    return pos;
+  }
+};
+
+const drawSingleWall = (e) => {
+  if(draw){
     cube = new Cube(cubeSize);
 
-    cube._singleBlock(pos, xPosGrid, zPosGrid);
+    cube._singleBlock(e, xPosGrid, zPosGrid);
 
     if(cube.position.x === 10 && cube.position.z === 10 ||
       cube.position.x === 10 && cube.position.z === -10 ||
@@ -186,21 +278,47 @@ const drawSingleWall = () => {
       innerWalls.push(cube);
     }
   }
+  console.log(innerWalls.length);
 
-  /*if(innerWalls.length === 10000 && draw){
+  /*if(innerWalls.length === 500 && draw){
     draw = false;
-    raiseWalls();
+    drawCoins();
   }*/
 };
 
 const drawCoins = () => {
-  xPosGrid.forEach(() => {
-    zPosGrid.forEach(num => {
-      console.log(num);
-    });
-  });
+  //Geef positie terug waar geen coin en geen cube is, plaats daar een coin
+  let randomX = randomPos(xGrid);
+  let randomZ = randomPos(zGrid);
 
-  raiseWalls();
+  let found = false;
+  let counter = 0;
+
+  innerWalls.forEach(w => {
+    counter++;
+
+    if(found){
+      drawCoins();
+    }else{
+      if(w.position.x === randomX && w.position.z === randomZ){
+        found = true;
+      }
+    }
+
+    if(counter === innerWalls.length){
+      console.log('draw');
+
+      if(coins.length === numCoins){
+        raiseWalls();
+      }else{
+        let coin = new Coin(randomX, randomZ);
+        scene.add(coin.render());
+        coins.push(coin);
+
+        drawCoins();
+      }
+    }
+  });
 };
 
 const raiseWalls = () => {
@@ -219,7 +337,7 @@ const raiseWalls = () => {
 };
 
 const setFocus = () => {
-  camera.position.set(pacman.position.x + 80, pacman.position.y + 60, pacman.position.z + 50);
+  camera.position.set(pacman.position.x + 80, pacman.position.y + 80, pacman.position.z + 50);
   camera.lookAt(pacman.position);
   follow = true;
 };
