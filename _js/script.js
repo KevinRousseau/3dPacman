@@ -200,14 +200,15 @@ const drawWalls = () => {
       let betweenPos = {};
 
       if(posX === endPosX){
-        betweenPos.x = posX;
         if(posZ < endPosZ){
           for(let i = posZ+cubeSize.width; i <= endPosZ; i+=cubeSize.width){
+            betweenPos.x = posX;
             betweenPos.z = i;
             drawSingleWall(betweenPos);
           }
         }else{
           for(let i = posZ-cubeSize.width; i >= endPosZ; i-=cubeSize.width){
+            betweenPos.x = posX;
             betweenPos.z = i;
             drawSingleWall(betweenPos);
           }
@@ -230,6 +231,11 @@ const drawWalls = () => {
         }
 
       }
+
+      posX = undefined;
+      posZ = undefined;
+      endPosX = undefined;
+      endPosZ = undefined;
     }
   });
 
@@ -238,7 +244,7 @@ const drawWalls = () => {
     if(e.keyCode === 32){
       if(!follow){
         draw = false;
-        drawCoins();
+        //drawCoins(); //draw coins here
         raiseWalls();
       }
     }
@@ -302,7 +308,7 @@ const drawCoins = () => {
     counter++;
 
     if(found){
-      drawCoins();
+      //drawCoins();
     }else{
       if(w.position.x === randomX && w.position.z === randomZ){
         found = true;
@@ -313,6 +319,7 @@ const drawCoins = () => {
       console.log('draw');
 
       if(coins.length === numCoins){
+        console.log('raise walls');
         raiseWalls();
       }else{
         let coin = new Coin(randomX, randomZ);
