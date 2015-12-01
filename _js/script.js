@@ -16,6 +16,9 @@ let OrbitControls = require('three-orbit-controls')(THREE);
 let _three;
 let keys = ['Down', 'Right', 'Left', 'Up'];
 
+//socket.io
+let socket;
+
 //sizes
 let windowSize = { //1140 x 750
   'width': window.innerWidth,
@@ -55,8 +58,9 @@ let outerWalls = [],
 let follow = false,
   draw = true;
 
-
 const init = () => {
+  socket = io('http://localhost:3000');
+
   _three = $('.three');
 
   if(_three){
