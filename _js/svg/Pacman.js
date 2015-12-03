@@ -17,8 +17,8 @@ export default class Pacman {
     sphere.geometry.computeVertexNormals();
 
     sphere.position.y = 0;
-    sphere.position.x = 0;
-    sphere.position.z = 0;
+    sphere.position.x = -10;
+    sphere.position.z = -10;
 
     sphere.castShadow = true;
     sphere.receiveShadow = true;
@@ -42,7 +42,7 @@ export default class Pacman {
 
     let geometry2 = new THREE.ExtrudeGeometry(shape, extrudeSettings2);
     let mesh2 = new THREE.Mesh(geometry2, triangleMaterial);
-    mesh2.position.set(-9, 0, -10);
+    mesh2.position.set(-19, -2, -20);
 
     mesh2.castShadow = true;
     mesh2.receiveShadow = true;

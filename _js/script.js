@@ -5,8 +5,9 @@
 
 // import 'babel-core/polyfill';
 // or import specific polyfills
-import {Grid, Cube, Floor, Pacman, Coin} from './svg/';
-import {randomPos, closest} from './helpers/util';
+
+import {Grid, Cube, Floor, Pacman} from './svg/';
+import {closest} from './helpers/util';
 
 
 let OrbitControls = require('three-orbit-controls')(THREE);
@@ -30,8 +31,6 @@ let cubeSize = {
   'depth': 20
 };
 
-let numCoins = 5;
-
 //three objects
 let scene,
   camera,
@@ -45,14 +44,11 @@ let floor,
   pacman;
 
 //arrays
-let outerWalls = [],
+let collisionGrid = [],
+  outerWalls = [],
   innerWalls = [],
   xPosGrid = [],
-  zPosGrid = [],
-  coins = [],
-  allWalls = [],
-  xGrid,
-  zGrid;
+  zPosGrid = [];
 
 let originalX = 0;
 let originalZ = 0;
@@ -72,6 +68,10 @@ const init = () => {
   _three = $('.three');
 
   if(_three){
+    for(let i = 0; i < 760; i++){
+      collisionGrid.push(false);
+    }
+
     setScene();
   }
 };
@@ -128,6 +128,7 @@ const setWalls = () => {
   //horizontale muren
   for(let i = topWall; i <= -(topWall); i += -(topWall*2)) {
     for(let j = leftWall; j <= -(leftWall); j += 20) {
+      addCollision(j, i);
       xPosGrid.push(j);
       cubeHor = new Cube(cubeSize);
       cubeHor._walls(i, j);
@@ -138,6 +139,7 @@ const setWalls = () => {
   //verticale muren
   for(let i = leftWall; i <= -(leftWall); i += -(leftWall*2)) {
     for(let j = topWall; j <= -(topWall); j += 20) {
+      addCollision(i, j);
       zPosGrid.push(j);
       cubeVer = new Cube(cubeSize);
       cubeVer._walls(j, i);
@@ -146,17 +148,7 @@ const setWalls = () => {
     }
   }
 
-  xGrid = xPosGrid;
-  zGrid = zPosGrid;
-
-  xGrid.splice(xGrid[0], 2);
-  xGrid.pop();
-
-  zGrid.splice(zGrid[0], 2);
-  zGrid.pop();
-
   drawWalls();
-  // console.log(outerWalls);
 };
 
 const drawWalls = () => {
@@ -191,7 +183,8 @@ const drawWalls = () => {
       let c1 = convertPos(e);
       posX = closest(c1.x, xPosGrid);
       posZ = closest(c1.z, zPosGrid);
-      drawSingleWall(convertPos(e));
+      drawSingleWall(c1);
+      addCollision(posX, posZ);
       drawDown = true;
     }
   });
@@ -218,12 +211,14 @@ const drawWalls = () => {
             betweenPos.x = posX;
             betweenPos.z = i;
             drawSingleWall(betweenPos);
+            addCollision(posX, i);
           }
         }else{
           for(let i = posZ-cubeSize.width; i >= endPosZ; i-=cubeSize.width){
             betweenPos.x = posX;
             betweenPos.z = i;
             drawSingleWall(betweenPos);
+            addCollision(posX, i);
           }
         }
 
@@ -234,16 +229,20 @@ const drawWalls = () => {
             betweenPos.x = i;
             betweenPos.z = posZ;
             drawSingleWall(betweenPos);
+            addCollision(i, posZ);
           }
         }else{
           for(let i = posX-cubeSize.width; i >= endPosX; i-=cubeSize.width){
             betweenPos.x = i;
             betweenPos.z = posZ;
             drawSingleWall(betweenPos);
+            addCollision(i, posZ);
           }
         }
 
       }
+
+      console.log(collisionGrid);
 
       posX = undefined;
       posZ = undefined;
@@ -257,11 +256,46 @@ const drawWalls = () => {
     if(e.keyCode === 32){
       if(!follow){
         draw = false;
-        //drawCoins(); //draw coins here
         raiseWalls();
       }
     }
   });
+};
+
+const addCollision = (x, y) => { //y * viewwidth + x
+  let newX, newY;
+  let arrPosX, arrPosY;
+  let xWidth = 38;
+  let yWidth = 20;
+
+  //X
+  if(x === -10){
+    arrPosX = xWidth/2;
+  }else if(x === 10){
+    arrPosX = (xWidth/2)-1;
+  }else if(x < -10){
+    newX = x-10;
+    arrPosX = (newX/20)+xWidth/2;
+  }else if(x > 10){
+    newX = x-10;
+    arrPosX = (newX/20)+xWidth/2;
+  }
+
+  //Y
+  if(y === -10){
+    arrPosY = (yWidth/2)-1;
+  }else if(y === 10){
+    arrPosY = yWidth/2;
+  }else if(y < -10){
+    newY = y-10;
+    arrPosY = ((newY/20)+10);
+  }else if(y > 10){
+    newY = y-10;
+    arrPosY = (newY/20)+10;
+  }
+
+  let arrPos = (arrPosY * xWidth)+arrPosX;
+  collisionGrid[arrPos] = true;
 };
 
 const convertPos = (e) => {
@@ -309,42 +343,6 @@ const drawSingleWall = (e) => {
   }*/
 };
 
-const drawCoins = () => {
-  //Geef positie terug waar geen coin en geen cube is, plaats daar een coin
-  let randomX = randomPos(xGrid);
-  let randomZ = randomPos(zGrid);
-
-  let found = false;
-  let counter = 0;
-
-  innerWalls.forEach(w => {
-    counter++;
-
-    if(found){
-      //drawCoins();
-    }else{
-      if(w.position.x === randomX && w.position.z === randomZ){
-        found = true;
-      }
-    }
-
-    if(counter === innerWalls.length){
-      console.log('draw');
-
-      if(coins.length === numCoins){
-        console.log('raise walls');
-        raiseWalls();
-      }else{
-        let coin = new Coin(randomX, randomZ);
-        scene.add(coin.render());
-        coins.push(coin);
-
-        drawCoins();
-      }
-    }
-  });
-};
-
 const raiseWalls = () => {
   outerWalls.forEach(wallCube => { //scale muren naar normale grootte (bij camera draaien)
     wallCube._scaleUp();
@@ -358,7 +356,7 @@ const raiseWalls = () => {
   floor.changepos();
 
   //alle muren in 1 array
-  allWalls = innerWalls.concat(outerWalls);
+  //allWalls = innerWalls.concat(outerWalls);
   // console.log(allWalls);
 
   setFocus();
@@ -367,35 +365,31 @@ const raiseWalls = () => {
 const setFocus = () => {
   // camera.position.set(originalX, originalY, originalZ);
 
-  if(ox == false || oy == false || ox == false) {
+  if(ox === false || oy === false || oz === false) {
     camera.position.set(originalX + pacman.position.x, originalY + pacman.position.y, originalZ + pacman.position.z);
 
     if(originalZ<pacman.position.z + 50){
       originalZ++;
-    }
-    else{
+    }else{
       originalZ+=0;
       oz = true;
     }
 
     if(originalY>pacman.position.y + 80){
       originalY--;
-    }
-    else{
+    }else{
       originalY-=0;
       oy = true;
     }
 
     if(originalX<pacman.position.x + 80){
       originalX++;
-    }
-    else{
+    }else{
       originalX+=0;
       ox = true;
     }
-  }
-  else{
-    camera.position.set(pacman.position.x + 80, pacman.position.y + 80,pacman.position.z + 50);
+  }else{
+    camera.position.set(pacman.position.x + 80, pacman.position.y + 80, pacman.position.z + 50);
   }
 
   camera.lookAt(pacman.position);
@@ -413,22 +407,22 @@ const movePacman = (event, object) => {
 
   switch(keypressed){
   case 'Up':
-    object.position.x-=10;
+    object.position.x-=20;
     object.rotation.y = 0;
     break;
 
   case 'Down':
-    object.position.x+=10;
+    object.position.x+=20;
     object.rotation.y = Math.PI;
     break;
 
   case 'Left':
-    object.position.z+=10;
+    object.position.z+=20;
     object.rotation.y = Math.PI/2;
     break;
 
   case 'Right':
-    object.position.z-=10;
+    object.position.z-=20;
     object.rotation.y = (Math.PI/2)*3;
     break;
   }
