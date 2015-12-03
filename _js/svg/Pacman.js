@@ -32,7 +32,7 @@ export default class Pacman {
     ]);
 
     let v1 = new THREE.Vector3(0, 0, 0);
-    let v2 = new THREE.Vector3(0, 0, 10);
+    let v2 = new THREE.Vector3(0, 0, 20);
     let path = new THREE.LineCurve3(v1, v2);
     let extrudeSettings2 = {
       bevelEnabled: false,
@@ -42,7 +42,7 @@ export default class Pacman {
 
     let geometry2 = new THREE.ExtrudeGeometry(shape, extrudeSettings2);
     let mesh2 = new THREE.Mesh(geometry2, triangleMaterial);
-    mesh2.position.set(44, 2, -5);
+    mesh2.position.set(-9, 0, -10);
 
     mesh2.castShadow = true;
     mesh2.receiveShadow = true;

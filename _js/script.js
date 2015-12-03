@@ -8,9 +8,8 @@
 import {Grid, Cube, Floor, Pacman, Coin} from './svg/';
 import {randomPos, closest} from './helpers/util';
 
+
 let OrbitControls = require('three-orbit-controls')(THREE);
-//let ThreeBSP = require('three-csg');
-//require('csg');
 
 //tags/elements in html & controls
 let _three;
@@ -51,8 +50,17 @@ let outerWalls = [],
   xPosGrid = [],
   zPosGrid = [],
   coins = [],
+  allWalls = [],
   xGrid,
   zGrid;
+
+let originalX = 0;
+let originalZ = 0;
+let originalY =(windowSize.width/20)*4;
+
+let ox = false;
+let oz = false;
+let oy = false;
 
 //true/false
 let follow = false,
@@ -93,10 +101,14 @@ const setScene = () => {
   scene.add(pacman.render());
 
   //light
-  let light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 );
-  light.position.set(20, 65, 0);
-  light.castShadow = true;
-  light.intensity = 1;
+  let Hlight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 );
+  Hlight.position.set(20, 65, 0);
+  Hlight.castShadow = true;
+  Hlight.intensity = 0.6;
+  scene.add(Hlight);
+
+  let light = new THREE.PointLight();
+  light.position.set(-256, 256, -256);
   scene.add(light);
 
   //new OrbitControls(camera);
@@ -144,6 +156,7 @@ const setWalls = () => {
   zGrid.pop();
 
   drawWalls();
+  // console.log(outerWalls);
 };
 
 const drawWalls = () => {
@@ -288,7 +301,7 @@ const drawSingleWall = (e) => {
       innerWalls.push(cube);
     }
   }
-  console.log(innerWalls.length);
+  // console.log(innerWalls.length);
 
   /*if(innerWalls.length === 500 && draw){
     draw = false;
@@ -344,11 +357,47 @@ const raiseWalls = () => {
   grid.changepos();
   floor.changepos();
 
+  //alle muren in 1 array
+  allWalls = innerWalls.concat(outerWalls);
+  // console.log(allWalls);
+
   setFocus();
 };
 
 const setFocus = () => {
-  camera.position.set(pacman.position.x + 80, pacman.position.y + 80, pacman.position.z + 50);
+  // camera.position.set(originalX, originalY, originalZ);
+
+  if(ox == false || oy == false || ox == false) {
+    camera.position.set(originalX + pacman.position.x, originalY + pacman.position.y, originalZ + pacman.position.z);
+
+    if(originalZ<pacman.position.z + 50){
+      originalZ++;
+    }
+    else{
+      originalZ+=0;
+      oz = true;
+    }
+
+    if(originalY>pacman.position.y + 80){
+      originalY--;
+    }
+    else{
+      originalY-=0;
+      oy = true;
+    }
+
+    if(originalX<pacman.position.x + 80){
+      originalX++;
+    }
+    else{
+      originalX+=0;
+      ox = true;
+    }
+  }
+  else{
+    camera.position.set(pacman.position.x + 80, pacman.position.y + 80,pacman.position.z + 50);
+  }
+
   camera.lookAt(pacman.position);
   follow = true;
 };
@@ -386,6 +435,7 @@ const movePacman = (event, object) => {
 };
 
 const render = () => {
+  // console.log(innerWalls);
   if(follow){
     setFocus();
   }
