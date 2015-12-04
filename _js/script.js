@@ -9,6 +9,7 @@
 import {Grid, Cube, Floor, Pacman} from './svg/';
 import {closest} from './helpers/util';
 
+var TWEEN = require('tween.js');
 
 let OrbitControls = require('three-orbit-controls')(THREE);
 
@@ -153,101 +154,24 @@ const setWalls = () => {
 
 const drawWalls = () => {
   //drag and draw
-  /*let drag = false;
+  let drag = false;
 
-  _three.mouseup((e) => {
+  _three.mouseup(() => {
     drag = false;
   });
 
-  _three.mousedown((e) => {
+  _three.mousedown((event) => {
     drag = true;
-    //drawSingleWall(e);
+    let c1 = convertPos(event);
+    drawSingleWall(c1);
+
 
     _three.mousemove((e) => {
       if(drag){
-        drawSingleWall(e);
+        let c2 = convertPos(e);
+        drawSingleWall(c2);
       }
     });
-  });*/
-
-  //click and drag
-  let posX;
-  let posZ;
-  let endPosX;
-  let endPosZ;
-  let drawDown = false;
-  let drawUp = false;
-
-  _three.mousedown((e) => {
-    if(!drawDown){
-      let c1 = convertPos(e);
-      posX = closest(c1.x, xPosGrid);
-      posZ = closest(c1.z, zPosGrid);
-      drawSingleWall(c1);
-      addCollision(posX, posZ);
-      drawDown = true;
-    }
-  });
-
-  _three.mousemove((e) => {
-    if(drawDown && !drawUp){
-      let c2 = convertPos(e);
-      endPosX = closest(c2.x, xPosGrid);
-      endPosZ = closest(c2.z, zPosGrid);
-    }
-  });
-
-  _three.mouseup(() => {
-    drawUp = true;
-    if(drawUp){
-      drawDown = false;
-      drawUp = false;
-
-      let betweenPos = {};
-
-      if(posX === endPosX){
-        if(posZ < endPosZ){
-          for(let i = posZ+cubeSize.width; i <= endPosZ; i+=cubeSize.width){
-            betweenPos.x = posX;
-            betweenPos.z = i;
-            drawSingleWall(betweenPos);
-            addCollision(posX, i);
-          }
-        }else{
-          for(let i = posZ-cubeSize.width; i >= endPosZ; i-=cubeSize.width){
-            betweenPos.x = posX;
-            betweenPos.z = i;
-            drawSingleWall(betweenPos);
-            addCollision(posX, i);
-          }
-        }
-
-      }else if(posZ === endPosZ){
-
-        if(posX < endPosX){
-          for(let i = posX+cubeSize.width; i <= endPosX; i+=cubeSize.width){
-            betweenPos.x = i;
-            betweenPos.z = posZ;
-            drawSingleWall(betweenPos);
-            addCollision(i, posZ);
-          }
-        }else{
-          for(let i = posX-cubeSize.width; i >= endPosX; i-=cubeSize.width){
-            betweenPos.x = i;
-            betweenPos.z = posZ;
-            drawSingleWall(betweenPos);
-            addCollision(i, posZ);
-          }
-        }
-
-      }
-
-
-      posX = undefined;
-      posZ = undefined;
-      endPosX = undefined;
-      endPosZ = undefined;
-    }
   });
 
   //confirm maze draw with SPACEBAR
@@ -324,22 +248,34 @@ const drawSingleWall = (e) => {
 
     cube._singleBlock(e, xPosGrid, zPosGrid);
 
-    if(cube.position.x === 10 && cube.position.z === 10 ||
+    if(cube.position.x === 30 && cube.position.z === 30 ||
+      cube.position.x === 30 && cube.position.z === -30 ||
+      cube.position.x === -30 && cube.position.z === 30 ||
+      cube.position.x === -30 && cube.position.z === -30 ||
+      cube.position.x === -10 && cube.position.z === -30 ||
+      cube.position.x === 10 && cube.position.z === -30 ||
+      cube.position.x === -30 && cube.position.z === -10 ||
+      cube.position.x === -30 && cube.position.z === 10 ||
+      cube.position.x === 30 && cube.position.z === -10 ||
+      cube.position.x === 30 && cube.position.z === 10 ||
+      cube.position.x === -10 && cube.position.z === 30 ||
+      cube.position.x === 10 && cube.position.z === 30){
+      //don't add
+    }else{
+
+      if(cube.position.x === 10 && cube.position.z === 10 ||
       cube.position.x === 10 && cube.position.z === -10 ||
       cube.position.x === -10 && cube.position.z === 10 ||
       cube.position.x === -10 && cube.position.z === -10){
-      //don't add
-    }else{
-      scene.add(cube.render());
-      innerWalls.push(cube);
+        //don't add
+      }else{
+        addCollision(closest(cube.position.x, xPosGrid), closest(cube.position.z, zPosGrid));
+        scene.add(cube.render());
+        innerWalls.push(cube);
+      }
+
     }
   }
-  // console.log(innerWalls.length);
-
-  /*if(innerWalls.length === 500 && draw){
-    draw = false;
-    drawCoins();
-  }*/
 };
 
 const raiseWalls = () => {
@@ -354,17 +290,14 @@ const raiseWalls = () => {
   grid.changepos();
   floor.changepos();
 
-  //alle muren in 1 array
-  //allWalls = innerWalls.concat(outerWalls);
-  // console.log(allWalls);
-
   setFocus();
 };
-
+let tween;
 const setFocus = () => {
+  follow = true;
   // camera.position.set(originalX, originalY, originalZ);
 
-  if(ox === false || oy === false || oz === false) {
+  /*if(ox === false || oy === false || oz === false) {
     camera.position.set(originalX + pacman.position.x, originalY + pacman.position.y, originalZ + pacman.position.z);
 
     if(originalZ<pacman.position.z + 50){
@@ -389,10 +322,25 @@ const setFocus = () => {
     }
   }else{
     camera.position.set(pacman.position.x + 80, pacman.position.y + 80, pacman.position.z + 50);
-  }
+  }*/
 
-  camera.lookAt(pacman.position);
-  follow = true;
+  let test = new THREE.Vector3( camera.position.x, camera.position.y, camera.position.z );
+
+  tween = new TWEEN.Tween(camera.position).to({
+    x: pacman.position.x + 80,
+    y: pacman.position.y + 80,
+    z: pacman.position.z + 50
+  }, 2000).easing(TWEEN.Easing.Quadratic.In).onUpdate(() => {
+    console.log('update');
+    camera.lookAt(camera.position);
+  }).onComplete(() => {
+    console.log('complete');
+    camera.lookAt(pacman.position);
+    //follow = false;
+  }).start();
+
+  //camera.lookAt(pacman.position);
+  //camera.position.set(pacman.position.x + 80, pacman.position.y + 80, pacman.position.z + 50);
 };
 
 const movePacman = (event, object) => {
@@ -482,9 +430,10 @@ const move = (x, y) => {
 };
 
 const render = () => {
+
   // console.log(innerWalls);
   if(follow){
-    setFocus();
+    TWEEN.update();
   }
 
   if(!draw){

@@ -194,7 +194,8 @@
   "globals": {
     "io": true,
     "$": true,
-    "THREE": true
+    "THREE": true,
+    "TWEEN": true
   }
 
 }
