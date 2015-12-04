@@ -242,7 +242,6 @@ const drawWalls = () => {
 
       }
 
-      console.log(collisionGrid);
 
       posX = undefined;
       posZ = undefined;
@@ -405,27 +404,81 @@ const movePacman = (event, object) => {
 
   event.preventDefault();
 
+  let arrPos;
+
   switch(keypressed){
   case 'Up':
-    object.position.x-=20;
-    object.rotation.y = 0;
+    arrPos = move(object.position.x, object.position.z);
+
+    if(!collisionGrid[arrPos]){
+      object.position.x-=20;
+      object.rotation.y = 0;
+    }
     break;
 
   case 'Down':
-    object.position.x+=20;
-    object.rotation.y = Math.PI;
+    arrPos = move(object.position.x, object.position.z)+2;
+
+    if(!collisionGrid[arrPos]){
+      object.position.x+=20;
+      object.rotation.y = Math.PI;
+    }
     break;
 
   case 'Left':
-    object.position.z+=20;
-    object.rotation.y = Math.PI/2;
+    arrPos = move(object.position.x, object.position.z)+39;
+
+    if(!collisionGrid[arrPos]){
+      object.position.z+=20;
+      object.rotation.y = Math.PI/2;
+    }
     break;
 
   case 'Right':
-    object.position.z-=20;
-    object.rotation.y = (Math.PI/2)*3;
+    arrPos = move(object.position.x, object.position.z)-37;
+
+    if(!collisionGrid[arrPos]){
+      object.position.z-=20;
+      object.rotation.y = (Math.PI/2)*3;
+    }
     break;
   }
+};
+
+const move = (x, y) => {
+  let newX, newY;
+  let arrPosX, arrPosY;
+  let xWidth = 38;
+  let yWidth = 20;
+
+  //X
+  if(x === -10){
+    arrPosX = xWidth/2;
+  }else if(x === 10){
+    arrPosX = (xWidth/2)-1;
+  }else if(x < -10){
+    newX = x-10;
+    arrPosX = (newX/20)+xWidth/2;
+  }else if(x > 10){
+    newX = x-10;
+    arrPosX = (newX/20)+xWidth/2;
+  }
+
+  //Y
+  if(y === -10){
+    arrPosY = (yWidth/2)-1;
+  }else if(y === 10){
+    arrPosY = yWidth/2;
+  }else if(y < -10){
+    newY = y-10;
+    arrPosY = ((newY/20)+10);
+  }else if(y > 10){
+    newY = y-10;
+    arrPosY = (newY/20)+10;
+  }
+
+  let arrPos = (arrPosY * xWidth)+arrPosX;
+  return arrPos-1;
 };
 
 const render = () => {
