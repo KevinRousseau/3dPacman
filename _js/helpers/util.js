@@ -6,6 +6,34 @@ export const randomPos = arr => {
   return arr[Math.floor((Math.random() * arr.length) + 0)];
 };
 
+export const mapRangeSound = (value) => {
+  let val = value * (5 / 2000);
+  if(val >= 5){
+    return 5;
+  } else {
+    return val;
+  }
+};
+
+export const mapRangeGhost = (value2) => {
+  let val2 = (value2 - 0) * (0 - 1) / (200 - 0) + 1;
+  if(val2 <= 0){
+    return 0;
+  }else {
+    return val2;
+  }
+};
+
+export const dist = (x0, y0, z0, x1, y1, z1) => {
+  let deltaX = x1 - x0;
+  let deltaY = y1 - y0;
+  let deltaZ = z1 - z0;
+
+  let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+  return distance;
+};
+
 export const closest = (num, arr) => {
   let curr = arr[0];
   let diff = Math.abs(num - curr);

@@ -11,12 +11,12 @@ export default class Pacman {
   }
 
   render(){
-    let sphereGeometry = new THREE.SphereGeometry(8, 50, 50, 0);
+let sphereGeometry = new THREE.SphereGeometry(8, 50, 50, 0);
     let sphereMaterial = new THREE.MeshLambertMaterial( {color: 0xffee00, side: THREE.FrontSide} );
     let sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
     sphere.geometry.computeVertexNormals();
 
-    sphere.position.y = 0;
+    sphere.position.y = 400;
     sphere.position.x = -10;
     sphere.position.z = -10;
 
@@ -42,7 +42,7 @@ export default class Pacman {
 
     let geometry2 = new THREE.ExtrudeGeometry(shape, extrudeSettings2);
     let mesh2 = new THREE.Mesh(geometry2, triangleMaterial);
-    mesh2.position.set(-19, -2, -20);
+    mesh2.position.set(-19, 398, -20);
 
     mesh2.castShadow = true;
     mesh2.receiveShadow = true;

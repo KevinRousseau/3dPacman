@@ -5,3 +5,4 @@ export Grid from './Grid';
 export Floor from './Floor';
 export Pacman from './Pacman';
 export Coin from './Coin';
+export Ghost from './Ghost';
