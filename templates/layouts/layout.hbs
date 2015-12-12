@@ -5,11 +5,30 @@
 	<title>3dPacman</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" type="text/css" href="/css/style.css"/>
+  <script>
+      WebFontConfig = {
+        custom: {
+          families: ['alfa', 'bit'],
+          urls: ['../../assets/fonts/alfa/alfa.css', '../../assets/fonts/bit/bit.css'],
+        }
+      };
+      (function() {
+        var wf = document.createElement('script');
+        wf.src = 'js/vendor/webfontloader/webfontloader.js';
+        wf.type = 'text/javascript';
+        wf.async = 'true';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(wf, s);
+      })();
+    </script>
 </head>
 <body>
   <main>
-    {{{content}}}
+
+      {{{content}}}
+
   </main>
+
 
   <script src="/socket.io/socket.io.js"></script>
   <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>-->
@@ -19,5 +38,6 @@
   <!--<script src="node_modules/tween.js/src/Tween.js"></script>-->
   <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/tweenjs/0.6.1/tweenjs.min.js"></script>-->
   <script src="/js/script.js"></script>
+  // <script src="/js/start.js"></script>
 </body>
 </html>

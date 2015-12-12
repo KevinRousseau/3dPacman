@@ -60,27 +60,329 @@ main {
   display: block;
 }
 
+@font-face {
+  font-family: 'alfa';
+  src: url("/assets/fonts/alfa.eot");
+  src: url("/assets/fonts/alfa.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/alfa.woff") format("woff"), url("/assets/fonts/alfa.ttf") format("truetype"), url("/assets/fonts/alfa.svg#alfa") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
   font-size: 62.5%;
   font-family: 'Helvetica neue', Helvetica, Arial, sans-serif;
+  background-image: url(/assets/images/bg_black.jpg);
 }
 
 main {
   width: 100%;
   height: 100%;
-  font-size: 1.8em;
+  font-size: 1.5em;
+  text-align: center;
+  font-family: alfa;
+}
+
+.container {
+  width: 960px;
+  border: 1px solid red;
+  margin: 0 auto;
+  margin-top: 66px;
 }
 
 h1 {
   font-size: 1.3em;
+  background-image: url(/assets/images/logo.png);
+  background-repeat: no-repeat;
+  width: 364px;
+  height: 216px;
+  margin: 0 auto;
+  border: 1px solid blue;
+}
+
+h1 span {
+  display: none;
+}
+
+* {
+  outline: 0;
+}
+
+body {
+  font-size: 62.5%;
+  background: url(/assets/images/blob.png) no-repeat, url(/assets/images/maze.png) 0 430px no-repeat, url(/assets/images/bg_black.jpg) repeat;
+}
+
+main {
+  width: 100%;
+  height: 100%;
+  font-size: 1.5em;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smoothing: antialiased;
+  font-smoothing: grayscale;
+  position: absolute;
+}
+
+.gradient {
+  border: 1px solid black;
+  box-shadow: inset 0 0 5em 1em #000;
+}
+
+.container {
+  width: 960px;
+  overflow: hidden;
+  border: none;
+  margin: 0 auto;
+  margin-top: 66px;
+}
+
+h1 {
+  font-size: 1.3em;
+  background-image: url("/assets/images/logo.png");
+  background-repeat: no-repeat;
+  width: 364px;
+  height: 216px;
+  margin: 0 auto;
+  border: none;
+}
+
+h1 span {
+  display: none;
+}
+
+h2 {
+  margin-top: 26px;
+  text-transform: uppercase;
+  font-weight: regular;
+  font-style: normal;
+  letter-spacing: 0.15em;
+  font-size: 1em;
+  color: #ffff77;
+  font-family: alfa;
+  font-weight: normal;
+  transform: scale(1, 1.35);
+  -webkit-transform: scale(1, 1.35);
+  /* Safari and Chrome */
+  -moz-transform: scale(1, 1.35);
+  /* Firefox */
+  -ms-transform: scale(1, 1.35);
+  /* IE 9+ */
+  -o-transform: scale(1, 1.35);
+  /* Opera */
+  margin-bottom: 55px;
+}
+
+button {
+  background-color: transparent;
+  border: none;
+}
+
+.buttons {
+  position: relative;
+}
+
+.buttons:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.buttons span {
+  display: none;
+}
+
+.choice {
+  color: white;
+  font-family: bit;
+  font-size: 1.5em;
+  margin-left: 445px;
+  margin-top: 80px;
+  float: left;
+  transform: scale(1, 1.35);
+  -webkit-transform: scale(1, 1.35);
+  /* Safari and Chrome */
+  -moz-transform: scale(1, 1.35);
+  /* Firefox */
+  -ms-transform: scale(1, 1.35);
+  /* IE 9+ */
+  -o-transform: scale(1, 1.35);
+  /* Opera */
+}
+
+.pacman-button {
+  position: absolute;
+  width: 144px;
+  height: 156px;
+  background-image: url("/assets/images/pacman.png");
+  left: 155px;
+  margin-top: 20px;
+}
+
+.pacman-button:hover {
+  -webkit-animation: backandforth 1s ease 0s;
+  -webkit-animation-iteration-count: infinite;
+}
+
+.ghost-button {
+  position: absolute;
+  width: 155px;
+  height: 154px;
+  background-image: url("/assets/images/ghost.png");
+  right: 150px;
+  top: 20px;
+}
+
+.ghost-button:hover {
+  -webkit-animation: upanddown 1s ease 0s;
+  -webkit-animation-iteration-count: infinite;
+}
+
+@-webkit-keyframes backandforth {
+  0% {
+    left: 155px;
+  }
+  50% {
+    left: 170px;
+  }
+  100% {
+    left: 155px;
+  }
+}
+
+@-webkit-keyframes upanddown {
+  0% {
+    top: 20px;
+  }
+  50% {
+    top: 5px;
+  }
+  100% {
+    top: 20px;
+  }
+}
+
+@keyframes upanddown {
+  0% {
+    top: 20px;
+  }
+  50% {
+    top: 5px;
+  }
+  100% {
+    top: 20px;
+  }
+}
+
+.shadow:nth-of-type(1) {
+  position: absolute;
+  width: 204px;
+  height: 38px;
+  margin-top: 190px;
+  left: 130px;
+  background-image: url("/assets/images/shadow.png");
+}
+
+.shadow:nth-of-type(3) {
+  position: absolute;
+  width: 204px;
+  height: 38px;
+  margin-top: 190px;
+  right: 125px;
+  background-image: url("/assets/images/shadow.png");
+}
+
+.shadowSmall {
+  position: absolute;
+  width: 73px;
+  height: 31px;
+  margin-top: 140px;
+  left: 430px;
+  background-image: url("/assets/images/shadowSmall.png");
+}
+
+.buttons p:nth-of-type(1) {
+  background-image: url("/assets/images/text1.png");
+  width: 204px;
+  height: 47px;
+  position: absolute;
+  left: 145px;
+  top: 240px;
+}
+
+.buttons p:nth-of-type(3) {
+  background-image: url("/assets/images/text2.png");
+  width: 215px;
+  height: 47px;
+  position: absolute;
+  right: 155px;
+  top: 240px;
+}
+
+.people {
+  margin-top: 250px;
+  margin-bottom: 50px;
+  font-family: bit;
+  color: white;
+  font-size: 1.32em;
+  transform: scale(1, 1.35);
+  -webkit-transform: scale(1, 1.35);
+  /* Safari and Chrome */
+  -moz-transform: scale(1, 1.35);
+  /* Firefox */
+  -ms-transform: scale(1, 1.35);
+  /* IE 9+ */
+  -o-transform: scale(1, 1.35);
+  /* Opera */
+}
+
+.people strong {
+  color: #ffff77;
+  font-size: 1.2em;
 }
 
 .hidden {
   display: none;
 }
 
-.start {
+.error-pacman-first {
+  text-transform: uppercase;
+  color: #eac700;
+  letter-spacing: 0.15em;
   position: absolute;
+  right: 135px;
+  top: 310px;
+  transform: scale(1, 1.35) skew(20deg, 0deg);
+  -webkit-transform: scale(1, 1.35) skew(20deg, 0deg);
+  /* Safari and Chrome */
+  -moz-transform: scale(1, 1.35) skew(20deg, 0deg);
+  /* Firefox */
+  -ms-transform: scale(1, 1.35) skew(20deg, 0deg);
+  /* IE 9+ */
+  -o-transform: scale(1, 1.35) skew(20deg, 0deg);
+  /* Opera */
+}
+
+.error-ghost {
+  text-transform: uppercase;
+  color: #ff0066;
+  letter-spacing: 0.15em;
+  position: absolute;
+  left: 140px;
+  top: 310px;
+  transform: scale(1, 1.35) skew(-20deg, 0deg);
+  -webkit-transform: scale(1, 1.35) skew(-20deg, 0deg);
+  /* Safari and Chrome */
+  -moz-transform: scale(1, 1.35) skew(-20deg, 0deg);
+  /* Firefox */
+  -ms-transform: scale(1, 1.35) skew(-20deg, 0deg);
+  /* IE 9+ */
+  -o-transform: scale(1, 1.35) skew(-20deg, 0deg);
+  /* Opera */
+}
+
+.three {
+  margin-top: -62px;
 }
 
 .timing {

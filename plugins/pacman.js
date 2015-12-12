@@ -56,7 +56,7 @@ module.exports.register = (server, options, next) => {
     });
   });
 
-next();
+  next();
 
 };
 

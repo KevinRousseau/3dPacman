@@ -34,57 +34,33 @@ let cubeSize = {
 };
 
 //three objects
-let scene,
-  camera,
-  renderer;
+let scene, camera, renderer;
 
-let floor,
-  grid,
-  cube,
-  cubeHor,
-  cubeVer,
-  pacman,
-  ghost1,
-  ghost2,
-  ghost3;
+let floor, grid, cube, cubeHor, cubeVer, pacman, ghost1, ghost2, ghost3;
 
 //push back
 let audioContext;
 
-let mediaStreamSource = null;
-let analyser = null;
-let buflen = 1024;
-let buf = new Float32Array( buflen );
-let MIN_SAMPLES = 0;
-let distbt;
+let mediaStreamSource = null, analyser = null, buflen = 1024, buf = new Float32Array( buflen ),
+  MIN_SAMPLES = 0, distbt;
 
-let update = false;
+let update = false, pushGhost = false, pushingGhost, soundPushDirection = 1, timeinterval;
 
 //arrays
-let collisionGrid = [],
-  outerWalls = [],
-  innerWalls = [],
-  xPosGrid = [],
-  zPosGrid = [],
-  ghosts = [];
+let collisionGrid = [], outerWalls = [], innerWalls = [], xPosGrid = [], zPosGrid = [], ghosts = [];
 
-let originalX = 0;
-let originalZ = 0;
-let originalY =(windowSize.width/20)*4;
+let originalX = 0, originalZ = 0, originalY =(windowSize.width/20)*4;
 
-let ox = false;
-let oz = false;
-let oy = false;
+let ox = false, oz = false, oy = false;
 
 //true/false
-let follow = false,
-  draw = true,
-  startGame = false;
+let follow = false, draw = true, startGame = false;
 
 //server
-let players = [],
-  game = {},
-  you;
+let players = [], game = {}, you;
+
+//
+let playNum = 0;
 
 
 const init = () => {
@@ -114,10 +90,17 @@ const server = () => {
 
         game = gameData;
         //game.nowPlaying = 0;
-        $('.numPlaying').text(game.nowPlaying);
+        if(game.nowPlaying === undefined){
+          playNum = '<strong>0</strong>';
+        } else{
+          playNum = '<strong>' + game.nowPlaying + '</strong>';
+
+        }
+        $('.numPlaying').html(playNum);
 
         if(game.start){
           $('.buttons').addClass('hidden');
+          $('.title').addClass('hidden');
         }
 
         if(game.nowPlaying === 4){
@@ -149,40 +132,42 @@ const server = () => {
   socket.on('leave', socketid => {
     players.forEach(p => {
 
+    if(p.socketid === socketid && startGame){
+      if(p.id === game.pacmanId){
+        pacman.position.y = 400;
+        game.pacmanId = undefined;
+        game.nowPlaying--;
+        reset();
+      }else if(p.id === game.ghost1Id){
+        ghost1.position.y = 400;
+        game.ghost1Id = undefined;
+        game.nowPlaying--;
+      }else if( p.id === game.ghost2Id){
+        ghost2.position.y = 400;
+        game.ghost2Id = undefined;
+        game.nowPlaying--;
+      }else if( p.id === game.ghost3Id){
+        ghost3.position.y = 400;
+        game.ghost3Id = undefined;
+        game.nowPlaying--;
+      }
+
       if(game.nowPlaying === 1 && game.pacmanId){
+        //socket.emit('update', game);
+        reset();
+      }
+
+      if(game.nowPlaying === 0 /*&& game.pacmanId*/){
         socket.emit('update', game);
         reset();
       }
 
-      if(p.socketid === socketid && startGame){
-        if(p.id === game.pacmanId){
-          pacman.position.y = 400;
-          game.pacmanId = undefined;
-          game.nowPlaying--;
-        }else if(p.id === game.ghost1Id){
-          ghost1.position.y = 400;
-          game.ghost1Id = undefined;
-          game.nowPlaying--;
-        }else if( p.id === game.ghost2Id){
-          ghost2.position.y = 400;
-          game.ghost2Id = undefined;
-          game.nowPlaying--;
-        }else if( p.id === game.ghost3Id){
-          ghost3.position.y = 400;
-          game.ghost3Id = undefined;
-          game.nowPlaying--;
-        }
+      socket.emit('update', game);
 
-        if(follow){
-          reset();
-        }
-
-        socket.emit('update', game);
-
-        players.splice(p, 1);
-      }
-    });
+      players.splice(p, 1);
+    }
   });
+});
 
   socket.on('updated', gameData => {
     game = gameData;
@@ -206,8 +191,7 @@ const server = () => {
       }
     }
 
-    if(you.id === game.pacmanId || you.id === game.ghost1Id ||
-          you.id === game.ghost2Id || you.id === game.ghost3Id){
+    if(you.id === game.pacmanId || you.id === game.ghost1Id || you.id === game.ghost2Id || you.id === game.ghost3Id){
     }else{
       $('.buttons').removeClass('hidden');
     }
@@ -218,11 +202,17 @@ const server = () => {
       $('.buttons').addClass('hidden');
     }
 
+    if(game.nowPlaying === 1 && !game.pacmanId){
+      reset();
+    }
+
     if(game.start){
       $('.buttons').addClass('hidden');
+      $('.title').addClass('hidden');
     }else{
       if(!you){
         $('.buttons').removeClass('hidden');
+        $('.title').removeClass('hidden');
         $('.error-ghost').addClass('hidden');
         $('.error-pacman-first').addClass('hidden');
       }
@@ -232,6 +222,19 @@ const server = () => {
   socket.on('reset', () => {
     location.reload();
   });
+
+  socket.on('catched', () => {
+    follow = false;
+    pacman.position.y = 400;
+    $('.finished').removeClass('hidden');
+
+    clearInterval(timeinterval);
+
+    setTimeout(() => {
+      reset();
+    }, 5000);
+  });
+
 };
 
 const ghostClick = () => {
@@ -271,6 +274,7 @@ const ghostClick = () => {
 const setScene = () => {
   $('.buttons').addClass('hidden');
   $('h1').addClass('hidden');
+  $('.title').addClass('hidden');
   //three setup
   scene = new THREE.Scene();
 
@@ -299,7 +303,8 @@ const setScene = () => {
 
   //ghost1
   ghost1 = new Ghost();
-  scene.add(ghost1.render(ghostColors[0], {x: 10, z: 10}));
+  scene.add(ghost1.render(ghostColors[0], {x: -310, z: -130}));
+  ghost1.name = 'ghost1';
   ghosts.push(ghost1);
   if(game.ghost1Id){
     ghost1.position.y = 0;
@@ -307,7 +312,8 @@ const setScene = () => {
 
   //ghost2
   ghost2 = new Ghost();
-  scene.add(ghost2.render(ghostColors[1], {x: 10, z: -10}));
+  scene.add(ghost2.render(ghostColors[1], {x: 310, z: 130}));
+  ghost2.name = 'ghost2';
   ghosts.push(ghost2);
   if(game.ghost2Id){
     ghost2.position.y = 0;
@@ -315,11 +321,13 @@ const setScene = () => {
 
   //ghost3
   ghost3 = new Ghost();
-  scene.add(ghost3.render(ghostColors[2], {x: -10, z: 10}));
+  scene.add(ghost3.render(ghostColors[2], {x: 310, z: -130}));
+  ghost3.name = 'ghost3';
   ghosts.push(ghost3);
   if(game.ghost3Id){
     ghost3.position.y = 0;
   }
+
 
   //light
   let Hlight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 );
@@ -551,13 +559,15 @@ const drawSingleWall = (e) => {
 const raiseWalls = () => {
   $('.timing').removeClass('hidden');
 
-  getSound();
+  if(you.id === game.pacmanId){
+    getSound();
+  }
 
   outerWalls.forEach(wallCube => { //scale muren naar normale grootte (bij camera draaien)
     wallCube._scaleUp();
   });
 
-  if(game.pacmanId === you.id){ //__________________________________________________________________________PACMAN CHECK
+  if(game.pacmanId === you.id){
     innerWalls.forEach(innerCube => {
       innerCube._scaleUp();
     });
@@ -758,45 +768,6 @@ const opponentMove = () => {
   });
 };
 
-const render = () => {
-
-  if(follow){
-    setFocus();
-  }
-
-  if(update){
-    updatePitch();
-  }
-
-  if(!draw){ //actief wanneer op spatie is gedrukt => kan enkel door pacman voorlopig
-    let shouldHandleKeyDown = true;
-
-    opponentMove();
-
-    document.onkeydown = e => {
-      if (!shouldHandleKeyDown) return;
-      shouldHandleKeyDown = false;
-
-      if(game.pacmanId === you.id){ //______________________________________________________________________PACMAN CHECK
-        moveCharacter(e, pacman);
-      }else if(game.ghost1Id === you.id){
-        moveCharacter(e, ghost1);
-      }else if(game.ghost2Id === you.id){
-        moveCharacter(e, ghost2);
-      }else if(game.ghost3Id === you.id){
-        moveCharacter(e, ghost3);
-      }
-    };
-
-    document.onkeyup = () => {
-      shouldHandleKeyDown = true;
-    };
-  }
-
-  requestAnimationFrame(render);
-  renderer.render(scene, camera);
-};
-
 //1.  get user media call
 const getSound = () => {
   getUserMedia(
@@ -835,6 +806,7 @@ const gotStream = (stream) => {
   analyser.fftSize = 2048;
   mediaStreamSource.connect( analyser );
   update = true;
+  pushingGhost = ghost1;
 };
 
 //4.  Update: check if yell/whistle.
@@ -842,11 +814,40 @@ const updatePitch = () => {
   analyser.getFloatTimeDomainData( buf );
   let ac = autoCorrelate( buf, audioContext.sampleRate );
   if (ac === -1) {
+    if(pushGhost){
+      pushingGhost.position.x = closest(pushingGhost.position.x, xPosGrid);
+      pushingGhost.position.z = closest(pushingGhost.position.z, zPosGrid);
+      //pushingGhost.name = 'pushingGhost';
+
+      let movePos = move(pushingGhost.position.x, pushingGhost.position.z);
+
+      if(collisionGrid[movePos+1]){
+        switch(soundPushDirection){
+        case 0:
+          pushingGhost.position.x-=20;
+          break;
+        case 1:
+          pushingGhost.position.x+=20;
+          break;
+        case 2:
+          pushingGhost.position.z+=20;
+          break;
+        case 3:
+          pushingGhost.position.z-=20;
+          break;
+        }
+      }else{
+        socket.emit('move', movePos, pushingGhost);
+      }
+    }
+
+    pushGhost = false;
     return;
   } else {
+    pushGhost = true;
     // console.log(Math.round( ac ));
     // console.log(mapRange())
-    // console.log(mapRange(Math.round(ac)))
+    //console.log('yes', Math.round(ac/500));
     moveGhosts(mapRangeSound(Math.round(ac)));
   }
 };
@@ -869,7 +870,6 @@ const autoCorrelate = (buff, sampleRate) => {
   if (rms<0.01){ // not enough signal
     return -1;
   }
-
 
   let lastCorrelation=1;
   for (let offset = MIN_SAMPLES; offset < MAX_SAMPLES; offset++) {
@@ -909,9 +909,7 @@ const autoCorrelate = (buff, sampleRate) => {
 };
 
 const moveGhosts = value => {
-
   // console.l
-
   ghosts.forEach(ghost => {
     //map distance & multiply = radius
     distbt = dist(pacman.position.x, pacman.position.y, pacman.position.z, ghost.position.x, ghost.position.y, ghost.position.z);
@@ -921,14 +919,18 @@ const moveGhosts = value => {
     if(pacman.position.x < ghost.position.x){
       // met gezicht naar blok
       if(pacman.rotation._y === Math.PI){
-        if(pacman.position.z === ghost.position.z){
+        if(pacman.position.z === ghost.position.z && ghost.position.y === 0){
+          soundPushDirection = 0;
+          pushingGhost = ghost;
           ghost.position.x+=value * multiply;
         }
       }
     }else{
       //met gezicht naar blok/omgedraaid
       if(pacman.rotation._y === 0){
-        if(pacman.position.z === ghost.position.z){
+        if(pacman.position.z === ghost.position.z && ghost.position.y === 0){
+          soundPushDirection = 1;
+          pushingGhost = ghost;
           ghost.position.x-=value * multiply;
         }
       }
@@ -937,20 +939,61 @@ const moveGhosts = value => {
     if(pacman.position.z > ghost.position.z){
       // met gezicht naar blok
       if(pacman.rotation._y === (Math.PI/2)*3){
-        if(pacman.position.x === ghost.position.x){
+        if(pacman.position.x === ghost.position.x && ghost.position.y === 0){
+          soundPushDirection = 2;
+          pushingGhost = ghost;
           ghost.position.z-=value * multiply;
         }
       }
     } else {
-
       //met gezicht naar blok/omgedraaid
       if(pacman.rotation._y === (Math.PI/2)){
-        if(pacman.position.x === ghost.position.x){
+        if(pacman.position.x === ghost.position.x && ghost.position.y === 0){
+          soundPushDirection = 3;
+          pushingGhost = ghost;
           ghost.position.z+=value * multiply;
         }
       }
     }
   });
+};
+
+const render = () => {
+  if(follow){
+    setFocus();
+  }
+
+  if(update){
+    updatePitch();
+  }
+
+  if(!draw){ //actief wanneer op spatie is gedrukt => kan enkel door pacman voorlopig
+    let shouldHandleKeyDown = true;
+
+    opponentMove();
+
+    document.onkeydown = e => {
+      if (!shouldHandleKeyDown) return;
+      shouldHandleKeyDown = false;
+
+      if(game.pacmanId === you.id){ //______________________________________________________________________PACMAN CHECK
+        moveCharacter(e, pacman);
+      }else if(game.ghost1Id === you.id){
+        moveCharacter(e, ghost1);
+      }else if(game.ghost2Id === you.id){
+        moveCharacter(e, ghost2);
+      }else if(game.ghost3Id === you.id){
+        moveCharacter(e, ghost3);
+      }
+    };
+
+    document.onkeyup = () => {
+      shouldHandleKeyDown = true;
+    };
+  }
+
+  requestAnimationFrame(render);
+  renderer.render(scene, camera);
 };
 
 const error = () => {

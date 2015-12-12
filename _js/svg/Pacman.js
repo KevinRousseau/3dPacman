@@ -11,7 +11,7 @@ export default class Pacman {
   }
 
   render(){
-let sphereGeometry = new THREE.SphereGeometry(8, 50, 50, 0);
+    let sphereGeometry = new THREE.SphereGeometry(8, 50, 50, 0);
     let sphereMaterial = new THREE.MeshLambertMaterial( {color: 0xffee00, side: THREE.FrontSide} );
     let sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
     sphere.geometry.computeVertexNormals();

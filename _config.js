@@ -15,7 +15,7 @@ module.exports = {
 
   css: {
     src: {
-      file: 'style.scss',
+      file: 'screen.scss',
       path: './_scss/'
     },
     dest: {
