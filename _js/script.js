@@ -6,8 +6,8 @@
 // import 'babel-core/polyfill';
 // or import specific polyfills
 
-import {Grid, Cube, Floor, Pacman, Ghost} from './svg/';
-import {closest, mapRangeSound, mapRangeGhost, dist} from './helpers/util';
+import {Grid, Cube, Floor, Pacman, Ghost, Coin} from './svg/';
+import {closest, mapRangeSound, mapRangeGhost, dist, randomPos} from './helpers/util';
 
 
 let OrbitControls = require('three-orbit-controls')(THREE);
@@ -47,7 +47,8 @@ let mediaStreamSource = null, analyser = null, buflen = 1024, buf = new Float32A
 let update = false, pushGhost = false, pushingGhost, soundPushDirection = 1, timeinterval;
 
 //arrays
-let collisionGrid = [], outerWalls = [], innerWalls = [], xPosGrid = [], zPosGrid = [], ghosts = [];
+let collisionGrid = [], outerWalls = [], innerWalls = [], xPosGrid = [], zPosGrid = [], ghosts = [],
+  coins = [], coinObjects = [];
 
 let originalX = 0, originalZ = 0, originalY =(windowSize.width/20)*4;
 
@@ -132,42 +133,38 @@ const server = () => {
   socket.on('leave', socketid => {
     players.forEach(p => {
 
-    if(p.socketid === socketid && startGame){
-      if(p.id === game.pacmanId){
-        pacman.position.y = 400;
-        game.pacmanId = undefined;
-        game.nowPlaying--;
-        reset();
-      }else if(p.id === game.ghost1Id){
-        ghost1.position.y = 400;
-        game.ghost1Id = undefined;
-        game.nowPlaying--;
-      }else if( p.id === game.ghost2Id){
-        ghost2.position.y = 400;
-        game.ghost2Id = undefined;
-        game.nowPlaying--;
-      }else if( p.id === game.ghost3Id){
-        ghost3.position.y = 400;
-        game.ghost3Id = undefined;
-        game.nowPlaying--;
-      }
+      if(p.socketid === socketid && startGame){
+        if(p.id === game.pacmanId){
+          pacman.position.y = 400;
+          game.pacmanId = undefined;
+          game.nowPlaying--;
+          //socket.emit('update', game);
+          reset();
+        }else if(p.id === game.ghost1Id){
+          ghost1.position.y = 400;
+          game.ghost1Id = undefined;
+          game.nowPlaying--;
+        }else if( p.id === game.ghost2Id){
+          ghost2.position.y = 400;
+          game.ghost2Id = undefined;
+          game.nowPlaying--;
+        }else if( p.id === game.ghost3Id){
+          ghost3.position.y = 400;
+          game.ghost3Id = undefined;
+          game.nowPlaying--;
+        }
 
-      if(game.nowPlaying === 1 && game.pacmanId){
-        //socket.emit('update', game);
-        reset();
-      }
+        if(game.nowPlaying === 0 || game.nowPlaying === 1){
+          socket.emit('update', game);
+          reset();
+        }
 
-      if(game.nowPlaying === 0 /*&& game.pacmanId*/){
         socket.emit('update', game);
-        reset();
+
+        players.splice(p, 1);
       }
-
-      socket.emit('update', game);
-
-      players.splice(p, 1);
-    }
+    });
   });
-});
 
   socket.on('updated', gameData => {
     game = gameData;
@@ -191,7 +188,9 @@ const server = () => {
       }
     }
 
-    if(you.id === game.pacmanId || you.id === game.ghost1Id || you.id === game.ghost2Id || you.id === game.ghost3Id){
+    if(you.id === game.pacmanId || you.id === game.ghost1Id
+      || you.id === game.ghost2Id || you.id === game.ghost3Id){
+      //do nothing
     }else{
       $('.buttons').removeClass('hidden');
     }
@@ -200,6 +199,10 @@ const server = () => {
 
     if(game.nowPlaying === 4){
       $('.buttons').addClass('hidden');
+    }
+
+    if(!game.pacmanId){
+      reset();
     }
 
     if(game.nowPlaying === 1 && !game.pacmanId){
@@ -226,13 +229,66 @@ const server = () => {
   socket.on('catched', () => {
     follow = false;
     pacman.position.y = 400;
-    $('.finished').removeClass('hidden');
+    let message = 'Pacman got caught!';
+    socket.emit('spreadMessage', message);
 
     clearInterval(timeinterval);
+
+    pacman.position.y = 400;
+    ghost1.position.y = 400;
+    ghost2.position.y = 400;
+    ghost3.position.y = 400;
 
     setTimeout(() => {
       reset();
     }, 5000);
+  });
+
+  socket.on('placeCoins', dataObject => {
+    coins = dataObject;
+
+    coins.forEach(coin => {
+      let newCoin = new Coin(coin.x, coin.z);
+      coinObjects.push(newCoin);
+      scene.add(newCoin.render());
+    });
+  });
+
+  let num = 1;
+
+  socket.on('catchedCoin', coinData => {
+    coinObjects.forEach(coinObject => {
+      if(coinObject.position.x === coinData.x && coinObject.position.z === coinData.z){
+        if(coinObject.coin.position.y === 400){
+          //do nothing
+        }else{
+          coinObject.coin.position.y = 400;
+          $('.caughtCoins').text(num++);
+          if(num === 21){
+            follow = false;
+            let message = 'Pacman found all coins!';
+            socket.emit('spreadMessage', message);
+
+            clearInterval(timeinterval);
+
+            pacman.position.y = 400;
+            ghost1.position.y = 400;
+            ghost2.position.y = 400;
+            ghost3.position.y = 400;
+
+            setTimeout(() => {
+              reset();
+            }, 5000);
+          }
+        }
+      }
+    });
+  });
+
+  socket.on('message', message => {
+    console.log(message);
+    $('.finished span').text(message);
+    $('.finished').removeClass('hidden');
   });
 
 };
@@ -442,7 +498,7 @@ const drawWalls = () => {
 
   //confirm maze draw with SPACEBAR
   $('body').keyup((e) => {
-    if(game.nowPlaying > 1){
+    if(game.nowPlaying > 2){
       if(e.keyCode === 32){
         if(!follow){
           draw = false;
@@ -528,15 +584,7 @@ const drawSingleWall = (e) => {
     if(cube.position.x === 30 && cube.position.z === 30 ||
       cube.position.x === 30 && cube.position.z === -30 ||
       cube.position.x === -30 && cube.position.z === 30 ||
-      cube.position.x === -30 && cube.position.z === -30 ||
-      cube.position.x === -10 && cube.position.z === -30 ||
-      cube.position.x === 10 && cube.position.z === -30 ||
-      cube.position.x === -30 && cube.position.z === -10 ||
-      cube.position.x === -30 && cube.position.z === 10 ||
-      cube.position.x === 30 && cube.position.z === -10 ||
-      cube.position.x === 30 && cube.position.z === 10 ||
-      cube.position.x === -10 && cube.position.z === 30 ||
-      cube.position.x === 10 && cube.position.z === 30){
+      cube.position.x === -30 && cube.position.z === -30){
       //don't add
     }else{
 
@@ -546,17 +594,46 @@ const drawSingleWall = (e) => {
       cube.position.x === -10 && cube.position.z === -10){
         //don't add
       }else{
-        addCollision(closest(cube.position.x, xPosGrid),
+        if(cube.position.x === -310 && cube.position.z === -130 ||
+          cube.position.x === 310 && cube.position.z === 130 ||
+          cube.position.x === 310 && cube.position.z === -130){
+          //don't add
+        }else{
+          addCollision(closest(cube.position.x, xPosGrid),
           closest(cube.position.z, zPosGrid));
-        scene.add(cube.render());
-        innerWalls.push(cube);
+          scene.add(cube.render());
+          innerWalls.push(cube);
+        }
       }
 
     }
   }
 };
 
+const setCoins = () => {
+  for(let i = 0; i < 100; i++){
+    if(coins.length < 20){
+      let coinPosX = randomPos(xPosGrid);
+      let coinPosZ = randomPos(zPosGrid);
+
+      let coinPosGrid = move(coinPosX, coinPosZ);
+
+      if(!collisionGrid[coinPosGrid+1]){
+        let coin = new Coin(coinPosX, coinPosZ);
+        coinObjects.push(coin);
+        coins.push({x: coinPosX, z: coinPosZ, arrPos: coinPosGrid});
+        scene.add(coin.render());
+      }
+    }
+  }
+};
+
 const raiseWalls = () => {
+  if(you.id === game.pacmanId){
+    setCoins();
+    socket.emit('coinsSet', coins);
+  }
+
   $('.timing').removeClass('hidden');
 
   if(you.id === game.pacmanId){
@@ -587,12 +664,16 @@ const timer = () => {
     sec--;
     $('.countdown').text(sec);
 
-    console.log('time');
-
     if(sec === 0){
-      $('.finished').removeClass('hidden');
+      let message = 'Time\'s up!';
+      socket.emit('spreadMessage', message);
 
       clearInterval(timeinterval);
+
+      pacman.position.y = 400;
+      ghost1.position.y = 400;
+      ghost2.position.y = 400;
+      ghost3.position.y = 400;
 
       setTimeout(() => {
         reset();
@@ -603,6 +684,7 @@ const timer = () => {
 
 const reset = () => {
   $('.timing').addClass('hidden');
+  game = {};
   game = {nowPlaying: 0};
   socket.emit('update', game);
   socket.emit('out');
@@ -794,7 +876,7 @@ const getUserMedia = (dictionary, callback) => {
     navigator.mozGetUserMedia;
     navigator.getUserMedia(dictionary, callback, error);
   } catch (e) {
-    console.log(e);
+    //console.log(e);
   }
 };
 
