@@ -32,7 +32,7 @@ main {
   overflow: hidden;
   border: none;
   margin: 0 auto;
-  margin-top: 66px;
+  margin-top: 36px;
 
   // .box {
     // width: 300px; height: 300px;
@@ -236,5 +236,50 @@ button {
 // }
 
 .timing {
+    font-size: 3.5em;
   position: absolute;
+    margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+    color: #e8e8e8;
+  font-family: bit;
+  text-shadow: 2px 2px 0px rgba(255, 0, 102, 1);
+}
+
+.finished {
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  top: 230px;
+  position: absolute;
+  color: #ff0066;
+  font-family: bit;
+  font-size: 3.5em;
+  line-height: 1.3em;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.6);
+  padding-top: 50px;
+  padding-bottom: 50px;
+
+  &::after {
+    content: "Wait to restart";
+    position: absolute;
+    left: -5px;
+    right: 0;
+    top: 128px;
+    color: #ddca26;
+  }
+
+  span {
+    font-size: 1.55em;
+    color: #e8e8e8;
+    text-shadow: 2px 2px 0px rgba(255, 0, 102, 1);
+  }
+}
+
+.timing p + p {
+  font-size: 50%;
+  margin-top: 30px;
 }

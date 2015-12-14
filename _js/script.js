@@ -65,7 +65,7 @@ let playNum = 0;
 
 
 const init = () => {
-  socket = io('http://localhost:3000');
+  socket = io('https://pacman3d.herokuapp.com');
 
   _three = $('.three');
 
@@ -138,7 +138,7 @@ const server = () => {
           pacman.position.y = 400;
           game.pacmanId = undefined;
           game.nowPlaying--;
-          //socket.emit('update', game);
+          socket.emit('update', game);
           reset();
         }else if(p.id === game.ghost1Id){
           ghost1.position.y = 400;
@@ -266,7 +266,7 @@ const server = () => {
           $('.caughtCoins').text(num++);
           if(num === 21){
             follow = false;
-            let message = 'Pacman found all coins!';
+            let message = 'Pacman won!';
             socket.emit('spreadMessage', message);
 
             clearInterval(timeinterval);
