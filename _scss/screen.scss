@@ -22,6 +22,10 @@ main {
 
 }
 
+.numPlaying {
+  font-family: alfa;
+}
+
 .gradient {
   border: 1px solid black;
   box-shadow: inset 0 0 5em 1em #000;
@@ -282,4 +286,5 @@ button {
 .timing p + p {
   font-size: 50%;
   margin-top: 30px;
+  font-family: alfa;
 }

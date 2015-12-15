@@ -36,11 +36,11 @@ module.exports.register = (server, options, next) => {
 
     let player = new Player(maxID + 1, socket.id);
 
-    players.unshift(player); //push = last pos ____ unshift = first pos
+    players.unshift(player);
 
-    socket.emit('init', players, player.socketid, game); //only myself
+    socket.emit('init', players, player.socketid, game);
 
-    socket.broadcast.emit('join', player); //broadcast to everyone
+    socket.broadcast.emit('join', player);
 
     socket.on('done-drawing', data => {
       socket.broadcast.emit('setup', data);

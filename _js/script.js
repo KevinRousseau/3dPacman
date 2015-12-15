@@ -1,16 +1,11 @@
 'use strict';
 
-// some features need the be polyfilled..
-// https://babeljs.io/docs/usage/polyfill/
-
-// import 'babel-core/polyfill';
-// or import specific polyfills
-
 import {Grid, Cube, Floor, Pacman, Ghost, Coin} from './svg/';
 import {closest, mapRangeSound, mapRangeGhost, dist, randomPos} from './helpers/util';
 
 
 let OrbitControls = require('three-orbit-controls')(THREE);
+//let TWEEN = require('tween.js');
 
 //tags/elements in html & controls
 let _three;
@@ -35,7 +30,6 @@ let cubeSize = {
 
 //three objects
 let scene, camera, renderer;
-
 let floor, grid, cube, cubeHor, cubeVer, pacman, ghost1, ghost2, ghost3;
 
 //push back
@@ -44,24 +38,20 @@ let audioContext;
 let mediaStreamSource = null, analyser = null, buflen = 1024, buf = new Float32Array( buflen ),
   MIN_SAMPLES = 0, distbt;
 
-let update = false, pushGhost = false, pushingGhost, soundPushDirection = 1, timeinterval;
+let update = false, pushGhost = false, pushingGhost, soundPushDirection = 1, timeinterval, playNum = 0;
 
 //arrays
 let collisionGrid = [], outerWalls = [], innerWalls = [], xPosGrid = [], zPosGrid = [], ghosts = [],
   coins = [], coinObjects = [];
 
-let originalX = 0, originalZ = 0, originalY =(windowSize.width/20)*4;
-
-let ox = false, oz = false, oy = false;
+//let originalX = 0, originalZ = 0, originalY =(windowSize.width/20)*4;
+//let ox = false, oz = false, oy = false;
 
 //true/false
 let follow = false, draw = true, startGame = false;
 
 //server
 let players = [], game = {}, you;
-
-//
-let playNum = 0;
 
 
 const init = () => {
@@ -90,13 +80,13 @@ const server = () => {
         you = p;
 
         game = gameData;
-        //game.nowPlaying = 0;
+
         if(game.nowPlaying === undefined){
           playNum = '<strong>0</strong>';
         } else{
-          playNum = '<strong>' + game.nowPlaying + '</strong>';
-
+          playNum = `<strong>${game.nowPlaying}</strong>`;
         }
+
         $('.numPlaying').html(playNum);
 
         if(game.start){
@@ -298,7 +288,6 @@ const ghostClick = () => {
     if(game.nowPlaying >= 1){
       if(game.ghost1Id === undefined){
         game.ghost1Id = you.id;
-        //game.nowPlaying = 2;
         game.nowPlaying++;
         startGame = true;
         socket.emit('update', game);
@@ -306,7 +295,6 @@ const ghostClick = () => {
         setScene();
       }else if(game.ghost2Id === undefined){
         game.ghost2Id = you.id;
-        //game.nowPlaying = 3;
         game.nowPlaying++;
         startGame = true;
         socket.emit('update', game);
@@ -314,7 +302,6 @@ const ghostClick = () => {
         setScene();
       }else if(game.ghost3Id === undefined){
         game.ghost3Id = you.id;
-        //game.nowPlaying = 4;
         game.nowPlaying++;
         startGame = true;
         socket.emit('update', game);
@@ -331,6 +318,7 @@ const setScene = () => {
   $('.buttons').addClass('hidden');
   $('h1').addClass('hidden');
   $('.title').addClass('hidden');
+
   //three setup
   scene = new THREE.Scene();
 
@@ -385,7 +373,7 @@ const setScene = () => {
   }
 
 
-  //light
+  //lights
   let Hlight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 );
   Hlight.position.set(20, 65, 0);
   Hlight.castShadow = true;
@@ -396,9 +384,9 @@ const setScene = () => {
   light.position.set(-256, 256, -256);
   scene.add(light);
 
-  //new OrbitControls(camera);
-  let controls = new OrbitControls(camera); //bestuur camera met muis
-  controls.enabled = false; //uitgeschakeld
+  //orbitcontrols
+  let controls = new OrbitControls(camera);
+  controls.enabled = false;
 
   setWalls();
 
@@ -410,7 +398,7 @@ const setWalls = () => {
   let leftWall = grid.position.x-(18.5*20);
   let topWall = grid.position.z-(9.5*20);
 
-  //horizontale muren
+  //hor walls
   for(let i = topWall; i <= -(topWall); i += -(topWall*2)) {
     for(let j = leftWall; j <= -(leftWall); j += 20) {
       addCollision(j, i);
@@ -421,7 +409,7 @@ const setWalls = () => {
       outerWalls.push(cubeHor);
     }
   }
-  //verticale muren
+  //vert walls
   for(let i = leftWall; i <= -(leftWall); i += -(leftWall*2)) {
     for(let j = topWall; j <= -(topWall); j += 20) {
       addCollision(i, j);
@@ -455,7 +443,7 @@ const setWalls = () => {
     }
 
     if(char){
-      socket.on('setup', data => { //check if pacman is done with drawing maze
+      socket.on('setup', data => {
         collisionGrid = data.grid;
         innerWalls = data.walls;
 
@@ -475,7 +463,6 @@ const setWalls = () => {
 };
 
 const drawWalls = () => {
-  //drag and draw
   let drag = false;
 
   _three.mouseup(() => {
@@ -518,7 +505,7 @@ const drawWalls = () => {
   });
 };
 
-const addCollision = (x, y) => { //y * viewwidth + x
+const addCollision = (x, y) => {
   let newX, newY;
   let arrPosX, arrPosY;
   let xWidth = 38;
@@ -640,7 +627,7 @@ const raiseWalls = () => {
     getSound();
   }
 
-  outerWalls.forEach(wallCube => { //scale muren naar normale grootte (bij camera draaien)
+  outerWalls.forEach(wallCube => {
     wallCube._scaleUp();
   });
 
@@ -692,38 +679,21 @@ const reset = () => {
 };
 
 const setFocus = () => {
-  // camera.position.set(originalX, originalY, originalZ);
+  /*//TWEEN
+  //new tween
+  //easing
+  //onupdate
+  //oncomplete
+  //start
 
-  /*if(ox === false || oy === false || oz === false) {
-    camera.position.set(originalX + you.object.position.x,
-      originalY + you.object.position.y,
-      originalZ + you.object.position.z);
-
-    if(originalZ<you.object.position.z + 50){
-      originalZ++;
-    }else{
-      originalZ+=0;
-      oz = true;
-    }
-
-    if(originalY>you.object.position.y + 80){
-      originalY--;
-    }else{
-      originalY-=0;
-      oy = true;
-    }
-
-    if(originalX<you.object.position.x + 80){
-      originalX++;
-    }else{
-      originalX+=0;
-      ox = true;
-    }
-  }else{
-    camera.position.set(you.object.position.x + 80,
-      you.object.position.y + 80,
-      you.object.position.z + 50);
-  }*/
+  /*new TWEEN.Tween( camera.position )
+  .easing( TWEEN.Easing.Sinusoidal.EaseInOut)
+  .to({
+    x: you.object.position.x,
+    y: you.object.position.y,
+    z: you.object.position.z
+  }, 600 )
+  .start();*/
 
   camera.position.set(you.object.position.x + 80,
       you.object.position.y + 80,
@@ -850,7 +820,7 @@ const opponentMove = () => {
   });
 };
 
-//1.  get user media call
+//get user media call
 const getSound = () => {
   getUserMedia(
     {
@@ -867,7 +837,7 @@ const getSound = () => {
   );
 };
 
-//2.  Callback
+//callback
 const getUserMedia = (dictionary, callback) => {
   try {
     navigator.getUserMedia =
@@ -880,7 +850,7 @@ const getUserMedia = (dictionary, callback) => {
   }
 };
 
-//3.  Check stream source.
+//check stream source.
 const gotStream = (stream) => {
   mediaStreamSource = audioContext.createMediaStreamSource(stream);
 
@@ -891,7 +861,7 @@ const gotStream = (stream) => {
   pushingGhost = ghost1;
 };
 
-//4.  Update: check if yell/whistle.
+//update: check if yell/whistle.
 const updatePitch = () => {
   analyser.getFloatTimeDomainData( buf );
   let ac = autoCorrelate( buf, audioContext.sampleRate );
@@ -899,7 +869,6 @@ const updatePitch = () => {
     if(pushGhost){
       pushingGhost.position.x = closest(pushingGhost.position.x, xPosGrid);
       pushingGhost.position.z = closest(pushingGhost.position.z, zPosGrid);
-      //pushingGhost.name = 'pushingGhost';
 
       let movePos = move(pushingGhost.position.x, pushingGhost.position.z);
 
@@ -927,14 +896,11 @@ const updatePitch = () => {
     return;
   } else {
     pushGhost = true;
-    // console.log(Math.round( ac ));
-    // console.log(mapRange())
-    //console.log('yes', Math.round(ac/500));
     moveGhosts(mapRangeSound(Math.round(ac)));
   }
 };
 
-//5.  Calculate pitch on sound.
+//calculate pitch on sound.
 const autoCorrelate = (buff, sampleRate) => {
   let SIZE = buff.length;
   let MAX_SAMPLES = Math.floor(SIZE/2);
@@ -949,7 +915,7 @@ const autoCorrelate = (buff, sampleRate) => {
     rms += val*val;
   }
   rms = Math.sqrt(rms/SIZE);
-  if (rms<0.01){ // not enough signal
+  if (rms<0.01){ //not enough signal
     return -1;
   }
 
@@ -984,22 +950,20 @@ const autoCorrelate = (buff, sampleRate) => {
     lastCorrelation = correlation;
   }
   if (bestCorrelation > 0.01) {
-    // console.log("f = " + sampleRate/bestOffset + "Hz (rms: " + rms + " confidence: " + bestCorrelation + ")")
     return sampleRate/bestOffset;
   }
   return -1;
 };
 
 const moveGhosts = value => {
-  // console.l
   ghosts.forEach(ghost => {
     //map distance & multiply = radius
     distbt = dist(pacman.position.x, pacman.position.y, pacman.position.z, ghost.position.x, ghost.position.y, ghost.position.z);
     let multiply = mapRangeGhost(distbt);
     //X VALUES
-    // pacman voor blok
+    // pacman in front of cube
     if(pacman.position.x < ghost.position.x){
-      // met gezicht naar blok
+      //pacman faced to cube
       if(pacman.rotation._y === Math.PI){
         if(pacman.position.z === ghost.position.z && ghost.position.y === 0){
           soundPushDirection = 0;
@@ -1008,7 +972,7 @@ const moveGhosts = value => {
         }
       }
     }else{
-      //met gezicht naar blok/omgedraaid
+      //pacman in front of cube faced the other way
       if(pacman.rotation._y === 0){
         if(pacman.position.z === ghost.position.z && ghost.position.y === 0){
           soundPushDirection = 1;
@@ -1019,7 +983,7 @@ const moveGhosts = value => {
     }
     //Z VALUES
     if(pacman.position.z > ghost.position.z){
-      // met gezicht naar blok
+      //pacman faced to the cube
       if(pacman.rotation._y === (Math.PI/2)*3){
         if(pacman.position.x === ghost.position.x && ghost.position.y === 0){
           soundPushDirection = 2;
@@ -1028,7 +992,7 @@ const moveGhosts = value => {
         }
       }
     } else {
-      //met gezicht naar blok/omgedraaid
+      //pacman in front of cube faced the other way
       if(pacman.rotation._y === (Math.PI/2)){
         if(pacman.position.x === ghost.position.x && ghost.position.y === 0){
           soundPushDirection = 3;
@@ -1049,7 +1013,7 @@ const render = () => {
     updatePitch();
   }
 
-  if(!draw){ //actief wanneer op spatie is gedrukt => kan enkel door pacman voorlopig
+  if(!draw){ //active when pressed on spacebar
     let shouldHandleKeyDown = true;
 
     opponentMove();
