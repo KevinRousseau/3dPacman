@@ -648,7 +648,7 @@ const raiseWalls = () => {
 
 const timer = () => {
   let sec = 60;
-  let timeinterval = setInterval(() => {
+  timeinterval = setInterval(() => {
     sec--;
     $('.countdown').text(sec);
 
