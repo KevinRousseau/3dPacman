@@ -55,7 +55,7 @@ let players = [], game = {}, you;
 
 
 const init = () => {
-  socket = io('http://pacman3d.herokuapp.com');
+  socket = io('https://pacman3d.herokuapp.com');
 
   _three = $('.three');
 
