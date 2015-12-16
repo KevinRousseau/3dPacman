@@ -8,16 +8,17 @@ export default class Grid {
   }
 
   changepos(){
-    if(this.position.y > -5){
+    /*if(this.position.y > -5){
       this.position.y--;
     }
-    requestAnimationFrame(() => this.changepos());
+    requestAnimationFrame(() => this.changepos());*/
+    this.position.y = 200;
   }
 
   render(){
     let grid = new THREE.GridHelper(this.windowSize.width, 20);
 
-    grid.setColors( 0xE30E5C, 0xffffff );
+    grid.setColors(0xA3A3A3, 0xA3A3A3);
 
     grid.position.x = 0;
     grid.position.y = 0;

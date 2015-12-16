@@ -55,7 +55,7 @@ let players = [], game = {}, you;
 
 
 const init = () => {
-  socket = io('https://pacman3d.herokuapp.com');
+  socket = io('http://localhost:3000');
 
   _three = $('.three');
 
@@ -99,6 +99,7 @@ const server = () => {
         }
 
         $('.pacman-button').click(() => {
+          $('.draw-info').removeClass('hidden');
           if(game.pacmanId === undefined){
             game.pacmanId = you.id;
             game.nowPlaying = 1;
@@ -372,7 +373,6 @@ const setScene = () => {
     ghost3.position.y = 0;
   }
 
-
   //lights
   let Hlight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 );
   Hlight.position.set(20, 65, 0);
@@ -488,6 +488,7 @@ const drawWalls = () => {
     if(game.nowPlaying > 2){
       if(e.keyCode === 32){
         if(!follow){
+          $('.draw-info').addClass('hidden');
           draw = false;
 
           game.start = true;

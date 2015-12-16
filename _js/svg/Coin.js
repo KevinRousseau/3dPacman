@@ -14,7 +14,7 @@ export default class Coin {
     let {x, y, z} = this.position;
 
     let geometry = new THREE.SphereGeometry(4, 10, 10, 0);
-    let material = new THREE.MeshLambertMaterial({color: 0xC79477, side: THREE.FrontSide});
+    let material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.FrontSide});
 
     let coin = new THREE.Mesh(geometry, material);
 

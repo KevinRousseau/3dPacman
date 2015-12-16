@@ -124,6 +124,12 @@ main {
   position: absolute;
 }
 
+.draw-info {
+  color: #fff;
+  font-size: 1.2em;
+  font-family: alfa;
+}
+
 .numPlaying {
   font-family: alfa;
 }
